@@ -17,7 +17,7 @@ ALPHA = 0.1  # Learning Rate
 GAMMA = 1
 MAP_HEIGHT = 10
 MAP_WIDTH = 10
-MAX_SESSION = 100000
+MAX_SESSION = 1000
 EXPLORATION = 1
 # Reward
 DEATH_REWARD = -100
@@ -192,7 +192,7 @@ class Environment:
         self.__cooling_rate = cooling_rate
         self.__max_q_arg = None
         self.__action = None
-        self.__exploration = 1
+        self.__exploration = exploration
         self.__current_state = None
         self.__alpha = alpha
         self.__gamma = gamma
@@ -211,6 +211,8 @@ class Environment:
         self.init_qtable()
         self.update_windows(0, 0)
         self.init_collision_map()
+
+    def start(self, is_should_save= True):
         self.run_session(True)
 
     def init_font(self):
@@ -289,7 +291,7 @@ class Environment:
     def update_q_table(self, is_q_table):
         if is_q_table:
             if os.path.exists(FILE_QTABLE):
-                old_table = open(FILE_QTABLE, 'r')
+                old_table = open(FILE_QTABLE, 'rb')
                 self.__q_table = pickle.load(old_table)
             else:
                 pass
@@ -302,13 +304,13 @@ class Environment:
         #     self.__q_table[state] = {}
         #     for action in ACTIONS:
         #         self.__q_table[state][action] = 0
-        for up in range(5):
-            for right in range(5):
-                for left in range(5):
-                    for down in range(5):
-                        for stay in range(5):
-                            for current in range(10):
-                                self.__q_table[up, right, left, down, stay, current] = [math.floor(random.uniform(0,6)) for i in range(5)]
+        for action_up in range(5):
+            for action_right in range(5):
+                for action_left in range(5):
+                    for action_down in range(5):
+                        for action_stay in range(5):
+                            for current_y in range(10):
+                                self.__q_table[action_up, action_right, action_left, action_down, action_stay, current_y] = [math.floor(random.uniform(0,5)) for i in range(5)]
 
     def save(self):
         with open(FILE_QTABLE, 'wb') as file:
@@ -410,7 +412,7 @@ class Environment:
                     # new_q = self.__alpha * (
                     #             self.__reward + self.__gamma * self.__max_next_q - self.__q_table[self.__current_state][self.__action])
 
-                    new_q = (1 - self.__alpha) * self.__q_table[self.__current_state][self.__action - 1] + self.__alpha * (self.__reward + self.__max_next_q)
+                    new_q = self.__q_table[self.__current_state][self.__action - 1] + self.__alpha * (self.__reward + self.__max_next_q - self.__q_table[self.__current_state][self.__action - 1])
                 self.__q_table[self.__current_state][self.__action - 1] = new_q
 
                 if (self.__reward == WIN_REWARD or self.__reward == DEATH_REWARD or step == self.__max_steps) and self.__is_able_to_die:
